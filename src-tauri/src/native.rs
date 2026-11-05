@@ -9,6 +9,9 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
+pub mod launcher;
+pub mod skin;
+use launcher::{ModuleSettings, Profile};
 
 #[derive(Deserialize)]
 struct FileEntry {
@@ -21,7 +24,7 @@ struct Manifest {
     minecraft: String,
     files: Vec<FileEntry>,
 }
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Progress {
     action: Option<String>,
     lines: Vec<String>,
@@ -49,6 +52,9 @@ pub struct Snapshot {
     lines: Vec<String>,
     error: Option<String>,
     data_home: String,
+    profiles: Vec<Profile>,
+    selected_profile: Option<String>,
+    modules: ModuleSettings,
 }
 
 fn err(e: impl std::fmt::Display) -> String {
@@ -91,9 +97,20 @@ fn hidden(c: &mut Command) {
 
 impl Backend {
     pub fn new(payload: PathBuf) -> Result<Self, String> {
-        let manifest: Manifest =
-            serde_json::from_slice(&fs::read(payload.join("manifest.json")).map_err(err)?)
-                .map_err(err)?;
+        let manifest_path = payload.join("manifest.json");
+        let manifest_bytes = fs::read(&manifest_path).map_err(|e| {
+            format!(
+                "Could not read payload manifest '{}': {}. Prepare the complete payload with Build-Native.ps1 -ClientRoot <TurtleClient-Mod checkout>; an empty payload directory is insufficient.",
+                manifest_path.display(), e
+            )
+        })?;
+        let manifest: Manifest = serde_json::from_slice(&manifest_bytes).map_err(|e| {
+            format!(
+                "Invalid payload manifest '{}': {}",
+                manifest_path.display(),
+                e
+            )
+        })?;
         relative(&manifest.version)?;
         relative(&manifest.minecraft)?;
         let root = std::env::var_os("TURTLE_LAUNCHER_HOME")
@@ -105,7 +122,9 @@ impl Backend {
         let launcher_home = std::env::var_os("HORIZON_LAUNCHER_HOME")
             .map(PathBuf::from)
             .unwrap_or_else(|| root.join("Launcher"));
-        fs::create_dir_all(root.join("logs")).map_err(err)?;
+        let logs = root.join("logs");
+        fs::create_dir_all(&logs)
+            .map_err(|e| format!("Could not create log directory '{}': {}", logs.display(), e))?;
         Ok(Self {
             payload,
             root,
@@ -202,6 +221,12 @@ impl Backend {
             fs::rename(&staging, &dir).map_err(err)?;
         }
         let instances = self.query(&["instance", "list", "--json"])?;
+        if instances.as_array().is_some_and(|v| {
+            v.iter()
+                .any(|i| i["version"] == self.manifest.version && i["java"].is_null())
+        }) {
+            return Ok(());
+        }
         if !instances
             .as_array()
             .is_some_and(|v| v.iter().any(|i| i["name"] == "TurtleClient"))
@@ -219,6 +244,13 @@ impl Backend {
     }
     pub fn snapshot(&self, p: &Progress) -> Result<Snapshot, String> {
         let accounts = self.query(&["account", "list", "--json"])?;
+        let profiles = self.profiles()?;
+        let selected = self.selected_profile(&profiles);
+        let modules = selected
+            .as_ref()
+            .map(|profile| self.modules(profile))
+            .transpose()?
+            .unwrap_or_default();
         Ok(Snapshot {
             version: self.manifest.version.clone(),
             minecraft: self.manifest.minecraft.clone(),
@@ -229,6 +261,9 @@ impl Backend {
             lines: p.lines.clone(),
             error: p.error.clone(),
             data_home: self.root.to_string_lossy().into_owned(),
+            selected_profile: selected.map(|profile| profile.id.clone()),
+            profiles,
+            modules,
         })
     }
     fn api(&self) -> Result<(), String> {
@@ -359,7 +394,8 @@ fn run_child(
 pub async fn get_state(state: tauri::State<'_, Shared>) -> Result<Snapshot, String> {
     let b = state.backend.clone();
     let p = state.progress.clone();
-    tauri::async_runtime::spawn_blocking(move || b.snapshot(&p.lock().unwrap()))
+    let progress = p.lock().unwrap().clone();
+    tauri::async_runtime::spawn_blocking(move || b.snapshot(&progress))
         .await
         .map_err(err)?
 }
@@ -370,7 +406,17 @@ pub fn start_action(
     state: tauri::State<'_, Shared>,
 ) -> Result<(), String> {
     if ![
-        "install", "prepare", "download", "sign-in", "play", "api", "select", "sign-out",
+        "install",
+        "prepare",
+        "download",
+        "sign-in",
+        "play",
+        "api",
+        "select",
+        "sign-out",
+        "create-profile",
+        "select-profile",
+        "rename-profile",
     ]
     .contains(&action.as_str())
     {
@@ -392,6 +438,9 @@ pub fn start_action(
         let result = (|| match action.as_str() {
             "install" => b.install(),
             "api" => b.api(),
+            "create-profile" => b.create_profile(value.as_deref().ok_or("No profile name")?),
+            "select-profile" => b.select_profile(value.as_deref().ok_or("No profile selected")?),
+            "rename-profile" => b.rename_profile(value.as_deref().ok_or("No profile name")?),
             "prepare" | "download" => {
                 b.install()?;
                 let mut args = vec!["prepare", "--version", &b.manifest.version];
@@ -419,8 +468,12 @@ pub fn start_action(
                     return Err("Prepare Minecraft 26.3 resources in Setup first.".into());
                 }
                 b.api()?;
+                let profiles = b.profiles()?;
+                let profile = b
+                    .selected_profile(&profiles)
+                    .ok_or("No Turtle profile selected")?;
                 run_child(
-                    b.command(&["play", "--instance", "TurtleClient"]),
+                    b.command(&["play", "--instance", &profile.id]),
                     &p,
                     &child,
                     Some(&b.root.join("logs/game-launch.log")),

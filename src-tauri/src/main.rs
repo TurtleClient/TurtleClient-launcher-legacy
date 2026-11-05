@@ -39,7 +39,11 @@ fn main() {
             native::start_action,
             native::cancel_action,
             native::open_location,
-            native::open_sign_in
+            native::open_sign_in,
+            native::launcher::save_modules,
+            native::launcher::read_cape,
+            native::launcher::upload_cape,
+            native::skin::read_player_skin
         ])
         .build(tauri::generate_context!())
         .expect("Turtle Launcher could not start")

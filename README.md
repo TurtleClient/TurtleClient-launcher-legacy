@@ -11,7 +11,7 @@ und `TurtleLauncher.exe` starten. Der Ordner `payload` muss neben dem portablen 
 1. Unter **Konto** mit dem Microsoft-Konto anmelden, das Minecraft: Java Edition besitzt.
 2. Unter **Einrichtung** eine vorhandene 26.3-Installation nutzen. Optional ihren Minecraft-Ordner
    angeben; alternativ nach der Anmeldung **Von Mojang herunterladen** wählen.
-3. Unter **Spielen** starten. Ocean-Rest startet dabei automatisch auf `127.0.0.1:3000`.
+3. Unten über **Spielen** starten. Ocean-Rest startet dabei automatisch auf `127.0.0.1:3000`.
 
 Der erste Ressourcenaufbau kann einige Minuten benötigen. Microsoft-Anmeldung, Besitzprüfung,
 Vorbereitung und Session-Übergabe erledigt das mitgelieferte Horizon-Backend.
@@ -26,7 +26,31 @@ Direktbefehl: `/emote wave`; weitere: `dance`, `point`, `clap`, `cheer`, `laugh`
 Daten liegen unter `%LOCALAPPDATA%/TurtleClient/`: `Launcher/`, `Game/`, `Ocean-Rest/`, `logs/`.
 `TURTLE_LAUNCHER_HOME` überschreibt den Hauptordner. Vorhandene Minecraft- und Horizon-Welten
 werden nicht verschoben. Beende das laufende Spiel im Spielmenü, damit die Welt gespeichert wird.
-Deutsch und Englisch sind über DE / EN umschaltbar.
+Deutsch und Englisch sind unter **Einstellungen → Sprache** umschaltbar.
+
+Die Oberfläche bietet eine Übersicht, Profilverwaltung, Module, Aussehen, Konten, Einrichtung und
+Aktivität. Neue Profile erhalten getrennte Spielordner. Zoom, Tastenbelegung, fließender Zoom,
+Emotes und Capes werden pro Profil in `config/turtleclient.json` gespeichert. Änderungen gelten
+beim nächsten Spielstart; während des Spiels sind diese Einstellungen gesperrt.
+Unter **Aussehen** lässt sich ein PNG-Cape (64 × 32 Pixel, maximal 2 MB) für das ausgewählte
+Konto in den lokalen Cape-Dienst laden. Die 3D-Vorschau lädt den Skin und das offizielle Cape des ausgewählten Minecraft-Kontos über
+Mojangs öffentlichen Profildienst; ein lokales Turtle-Cape hat Vorrang. Sie unterstützt Classic-/Slim-
+Arme, Skin-Ebenen, Drehen per Maus oder Pfeiltasten sowie Blickbewegungen. **Pos1** setzt die Kamera
+zurück. **Skin aktualisieren** lädt Änderungen erneut; bereits geladene Skins bleiben offline verfügbar.
+Ohne Anmeldung oder erreichbaren Skin wird ein neutrales Modell gezeigt. Die Emotes in der
+Launcher-Vorschau sind Vorschauanimationen. Reduzierte Bewegung deaktiviert automatische Animationen.
+Der Renderer [skinview3d](https://github.com/bs-community/skinview3d) nutzt Three.js; die MIT-Lizenzen
+sind unter `public/licenses/` enthalten.
+Akzentfarbe, reduzierte Bewegung und das Fensterverhalten werden lokal im Launcher gespeichert.
+
+Für die Entwicklung im Launcher-Verzeichnis:
+
+```powershell
+npm install
+npm run tauri dev
+```
+
+Dafür muss `src-tauri/payload` zuvor mit dem unten beschriebenen Build-Skript vorbereitet sein.
 
 ## Stand
 
