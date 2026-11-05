@@ -1,29 +1,22 @@
 {
-  "name": "liquidlauncher",
+  "name": "turtle-launcher",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.1.0",
   "type": "module",
   "license": "GPL-3.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri dev"
+    "tauri": "tauri"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.0",
-    "@tauri-apps/cli": "^2",
+    "@tauri-apps/cli": "^2.12.4",
     "svelte": "^4.2",
-    "svelte-loading-spinners": "^0.3.6",
     "vite": "^5.0"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-dialog": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-process": "^2",
-    "@tauri-apps/plugin-updater": "^2",
-    "jwt-decode": "^4.0.0",
-    "nouislider": "^15.7"
+    "@tauri-apps/api": "^2.12.4"
   }
 }

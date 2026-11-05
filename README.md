@@ -1,67 +1,68 @@
-# LiquidLauncher
-The official launcher for LiquidBounce.
+# Turtle Launcher — Native Alpha 0.1.0
 
-Website: https://liquidbounce.net \
-Forum: https://forums.ccbluex.net \
-Guilded: https://guilded.gg/CCBlueX \
-YouTube: https://youtube.com/CCBlueX \
-Twitter: https://twitter.com/CCBlueX
+Windows x64 launcher for the native TurtleClient, based on Horizon / Minecraft 26.3.
+This ports the Svelte / Tauri architecture and branding of TurtleClient's previous launcher.
 
-## Screenshots
-<table>
-    <tr>
-        <td>
-            <img src="gh_assets/screenshot-1.png">
-        </td>
-        <td>
-            <img src="gh_assets/screenshot-2.png">
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <img src="gh_assets/screenshot-3.png">
-        </td>
-        <td>
-            <img src="gh_assets/screenshot-4.png">
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <img src="gh_assets/screenshot-5.png">
-        </td>
-    </tr>
-</table>
+## Starten
 
-## Issues
-If you notice any bugs or missing features, you can let us know by opening an issue [here](https://github.com/CCBlueX/LiquidLauncher/issues).
+`TurtleLauncher-0.1.0-setup.exe` installieren oder das portable ZIP vollständig entpacken
+und `TurtleLauncher.exe` starten. Der Ordner `payload` muss neben dem portablen Programm bleiben.
 
-## License
-This project is subject to the [GNU General Public License v3.0](LICENSE). This does only apply for source code located directly in this clean repository. During the development and compilation process, additional source code may be used to which we have obtained no rights. Such code is not covered by the GPL license.
+1. Unter **Konto** mit dem Microsoft-Konto anmelden, das Minecraft: Java Edition besitzt.
+2. Unter **Einrichtung** eine vorhandene 26.3-Installation nutzen. Optional ihren Minecraft-Ordner
+   angeben; alternativ nach der Anmeldung **Von Mojang herunterladen** wählen.
+3. Unter **Spielen** starten. Ocean-Rest startet dabei automatisch auf `127.0.0.1:3000`.
 
-For those who are unfamiliar with the license, here is a summary of its main points. This is by no means legal advice nor legally binding.
+Der erste Ressourcenaufbau kann einige Minuten benötigen. Microsoft-Anmeldung, Besitzprüfung,
+Vorbereitung und Session-Übergabe erledigt das mitgelieferte Horizon-Backend.
+Für den Launcher muss weder Rust noch IntelliJ noch ein separat installierter Horizon Launcher vorhanden sein.
+Windows WebView2 wird benötigt; der Installer lädt es bei Bedarf von Microsoft.
+Die Ressourcenaufbereitung benötigt gegebenenfalls eine von Horizon verwaltete Java-Laufzeit.
+Das Spiel selbst ist nativ und lädt keine Fabric-JARs.
 
-You are allowed to
-- use
-- share
-- modify
+**B**: Emote-Rad halten und loslassen. **C**: Zoom halten, Mausrad für Zoomstufe.
+Direktbefehl: `/emote wave`; weitere: `dance`, `point`, `clap`, `cheer`, `laugh`, `stop`, `list`.
 
-this project entirely or partially for free and even commercially. However, please consider the following:
+Daten liegen unter `%LOCALAPPDATA%/TurtleClient/`: `Launcher/`, `Game/`, `Ocean-Rest/`, `logs/`.
+`TURTLE_LAUNCHER_HOME` überschreibt den Hauptordner. Vorhandene Minecraft- und Horizon-Welten
+werden nicht verschoben. Beende das laufende Spiel im Spielmenü, damit die Welt gespeichert wird.
+Deutsch und Englisch sind über DE / EN umschaltbar.
 
-- **You must disclose the source code of your modified work and the source code you took from this project. This means you are not allowed to use code from this project (even partially) in a closed-source (or even obfuscated) application.**
-- **Your modified application must also be licensed under the GPL** 
+## Stand
 
-Do the above and share your source code with everyone; just like we do.
+Dies ist eine erste Alpha für **26.3**. Ältere Serverversionen folgen später.
+Emotes sind lokal; eine gemeinsame Emote-/Cape-Plattform und weitere Module stehen in der Roadmap.
+Der lokale Cape-Dienst bleibt für weitere Spielstarts aktiv und kann mit
+`payload/Stop-OceanRest.ps1` beendet werden (PowerShell 7).
 
-## Icons
-We use [Clarity Line Icons](https://www.svgrepo.com/collection/clarity-line-icons/) for this project.
+Die Windows-Dateien sind nicht mit einem kommerziellen Codesignatur-Zertifikat signiert.
+Die SHA-256-Datei gehört zum Download. Es werden keine Minecraft-JARs, Mojang-Assets oder Kontodaten mitgeliefert.
 
-## Compile it yourself!
-LiquidLauncher is using Tauri and is written in the programming language Rust, so make sure that it is installed properly. Instructions can be found on [Rust's website](https://www.rust-lang.org/learn/get-started). It also requires NodeJS and yarn.
-1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidLauncher`. 
-2. Navigate into your local repository folder.
-3. Execute the command `yarn && yarn build`
-4. Now you can start the launcher using `npm run tauri dev` or build it by using `npm run tauri build`
+## Bauen
 
-## Contributing
+Repositories:
 
-We appreciate contributions. So if you want to support us, feel free to make changes to LiquidLauncher's source code and submit a pull request.
+- [Nativer Client](https://github.com/TurtleClient/TurtleClient-Mod/tree/codex/rust-26.3), Branch `codex/rust-26.3`.
+- [Nativer Launcher](https://github.com/TurtleClient/TurtleClient-launcher/tree/codex/native-launcher-26.3), Branch `codex/native-launcher-26.3`.
+
+Aus dem separaten Launcher-Checkout dieses Skript mit dem Pfad zum nativen Client ausführen:
+
+```powershell
+./Build-Native.ps1 -ClientRoot 'C:\Projekte\TurtleClient-Mod'
+```
+
+Das Skript baut die Quellen dieses Launcher-Checkouts. Das Client-Repository liefert den Spiel-Build,
+die lokal vorbereiteten Hilfsprogramme und die Paketierung. Die Ausgabe steht im `dist/`-Ordner
+des Client-Checkouts. Binärdateien und Minecraft-Ressourcen bleiben außerhalb von Git.
+
+Alternativ aus dem Client-Quellbaum mit der darin enthaltenen Launcher-Kopie:
+
+```powershell
+./tools/Build-TurtleLauncher.ps1
+```
+
+Voraussetzungen: Rust stable MSVC, Visual Studio C++ Build Tools, Node.js / npm und PowerShell 7.
+Das Skript übernimmt native Programme und die redistributierbaren Hilfsdateien aus der angegebenen
+Horizon-Version; alternative Pfade sind über `-HorizonLauncher` und `-HorizonVersion` möglich.
+Quellstand und Herkunft: `UPSTREAM.md`. Lizenz: GPL-3.0-or-later für den Launcher;
+Horizon und die übrigen Pakete behalten ihre eigenen Lizenzen.
